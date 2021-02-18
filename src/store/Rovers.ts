@@ -3,6 +3,10 @@ import { makeAutoObservable } from 'mobx';
 import { Photo } from '../api/entities/Photo';
 import { Rover } from '../api/entities/Rover';
 
+type RoverSol = Record<number, Photo[]>;
+type RoverCameras = Record<string, RoverSol>;
+type RoverPhotos = Record<string, RoverCameras>;
+
 class RoverList {
   rovers: Rover[] = [];
 
@@ -10,22 +14,28 @@ class RoverList {
 
   defaultFilter: string;
 
-  photosByRover: Record<number, Photo[]>;
+  photosByRover: RoverPhotos;
 
   constructor(rovers: Rover[]) {
     makeAutoObservable(this);
     this.rovers = rovers;
     this.photosByRover = {};
-    this.defaultSol = 365;
-    this.defaultFilter = 'all';
+    this.defaultSol = 1;
+    this.defaultFilter = 'fhaz';
   }
 
   setRovers(rovers: Rover[]) {
     this.rovers = rovers;
   }
 
-  setRoverPhotos(id: number, photos: Photo[]) {
-    this.photosByRover[id] = photos;
+  setRoverPhotos(id: number, sol: number, filter: string, photos: Photo[]) {
+    if (this.photosByRover?.[id]?.[filter]?.[sol]) {
+      this.photosByRover[id][filter][sol] = photos;
+    } else {
+      this.photosByRover[id] = { ...this.photosByRover[id] };
+      this.photosByRover[id][filter] = { ...this.photosByRover[id][filter] };
+      this.photosByRover[id][filter][sol] = [...photos];
+    }
   }
 
   getRoverByName = (name: string) =>
