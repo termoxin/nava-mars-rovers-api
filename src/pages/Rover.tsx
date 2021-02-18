@@ -61,8 +61,8 @@ export const RoverPage = observer(() => {
     setLoading(false);
   };
 
-  const debouncedSol = useDebounce(sol, 250);
-  const debouncedFilter = useDebounce(filter, 250);
+  const debouncedSol = useDebounce(sol, 300);
+  const debouncedFilter = useDebounce(filter, 300);
 
   useEffect(() => {
     fetchRoversData(name, debouncedSol, debouncedFilter);
@@ -80,15 +80,17 @@ export const RoverPage = observer(() => {
     }
   };
 
-  const onSelectCamera = (value: string) => {
-    setFilter(value);
-  };
+  const onSelectCamera = (value: string) => setFilter(value);
 
   const nextPhoto = () => carouselRef.current?.next();
   const prevPhoto = () => carouselRef.current?.prev();
 
   const rover = RoversState.getRoverByName(name);
-  const photos = rover?.id ? RoversState.photosByRover?.[rover.id]?.[filter]?.[sol] : [];
+
+  const photos = rover?.id
+    ? RoversState.photosByRover?.[rover.id]?.[debouncedFilter]?.[debouncedSol]
+    : [];
+
   const noPhotos = !hasPhotos && !isLoading && !initialLoading;
 
   const extraComponent = [
