@@ -10,6 +10,7 @@ interface NasaSDKConfig {
 
 export type fetchRoverPhotosParams = {
   sol: string;
+  camera: string;
 };
 
 export class NasaSDK {
