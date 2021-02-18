@@ -1,12 +1,10 @@
 import { Descriptions, InputNumber, PageHeader, Select, Spin } from 'antd';
 import Text from 'antd/lib/typography/Text';
 import { observer } from 'mobx-react-lite';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { CarouselRef } from 'antd/lib/carousel';
-
-import { debounce } from 'lodash';
 
 import RoversState from '../store/Rovers';
 
@@ -14,6 +12,7 @@ import { fetchPhotos } from '../effects/fetchPhotos';
 import { fetchRovers } from '../effects/fetchRovers';
 import { Heading } from '../components/Heading';
 import { RoversCarousel } from '../components/RoversCarousel';
+import { useDebounce } from '../hooks/useDebounce';
 
 const Container = styled.div`
   display: flex;
@@ -62,26 +61,27 @@ export const RoverPage = observer(() => {
     setLoading(false);
   };
 
-  const debouncedFetchRovers = useCallback(debounce(fetchRoversData, 300), []);
+  const debouncedSol = useDebounce(sol, 250);
+  const debouncedFilter = useDebounce(filter, 250);
+
+  useEffect(() => {
+    fetchRoversData(name, debouncedSol, debouncedFilter);
+  }, [name, debouncedSol, debouncedFilter]);
 
   useEffect(() => {
     if (initialLoading) {
       setInitialLoading(false);
     }
-
-    debouncedFetchRovers(name, sol, filter);
-  }, [name, sol, filter, debouncedFetchRovers, initialLoading]);
+  }, [initialLoading]);
 
   const onChangeSol = (value: string | number | null | undefined) => {
     if (value) {
       setSol(+value);
-      debouncedFetchRovers(name, +value, filter);
     }
   };
 
   const onSelectCamera = (value: string) => {
     setFilter(value);
-    debouncedFetchRovers(name, sol, value);
   };
 
   const nextPhoto = () => carouselRef.current?.next();
