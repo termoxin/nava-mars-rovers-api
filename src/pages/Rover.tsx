@@ -1,15 +1,17 @@
 import { Button, Carousel, Descriptions, Image, InputNumber, PageHeader, Select, Spin } from 'antd';
 import Text from 'antd/lib/typography/Text';
 import { observer } from 'mobx-react-lite';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { debounce } from 'lodash';
 import RoversState from '../store/Rovers';
 
 import { fetchPhotos } from '../effects/fetchPhotos';
 import { fetchRovers } from '../effects/fetchRovers';
 import { Spinner } from '../components/Spinner';
+import { Heading } from '../components/Heading';
 
 interface Params {
   name: string;
@@ -38,36 +40,66 @@ const ButtonsContainer = styled.div`
   }
 `;
 
+const StyledHeading = styled(Heading)`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+`;
+
 export const RoverPage = observer(() => {
   const [sol, setSol] = useState(RoversState.defaultSol);
   const [filter, setFilter] = useState(RoversState.defaultFilter);
+  const [hasPhotos, setHasPhotos] = useState(false);
+  const [isLoading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+
   const carouselRef = useRef<any>();
 
   const { name } = useParams<Params>();
   const { push } = useHistory();
 
+  const fetchData = async (roverName: string, selectedSol: number, camera: string) => {
+    setLoading(true);
+
+    await fetchRovers();
+
+    const response = await fetchPhotos(roverName, selectedSol, camera, {
+      sol: `${selectedSol}`,
+      camera,
+    });
+
+    setHasPhotos(response.hasPhotos);
+    setLoading(false);
+  };
+
+  const debouncedFetchRovers = useCallback(debounce(fetchData, 300), []);
+
   useEffect(() => {
-    fetchRovers().then(() => fetchPhotos(name, { sol: `${sol}` }));
-  }, [name, sol]);
+    if (initialLoading) {
+      setInitialLoading(false);
+    }
+
+    debouncedFetchRovers(name, sol, filter);
+  }, [name, sol, filter, debouncedFetchRovers, initialLoading]);
 
   const onChangeSol = (value: string | number | null | undefined) => {
     if (value) {
       setSol(+value);
+      debouncedFetchRovers(name, +value, filter);
     }
   };
 
-  const onSelectCamera = (value: string) => setFilter(value);
+  const onSelectCamera = (value: string) => {
+    setFilter(value);
+    debouncedFetchRovers(name, sol, value);
+  };
 
   const nextPhoto = () => carouselRef.current.next();
   const prevPhoto = () => carouselRef.current.prev();
 
   const rover = RoversState.getRoverByName(name);
-  const photos = rover?.id ? RoversState.photosByRover[rover?.id] : [];
-
-  const filteredPhotos = useMemo(
-    () => (filter === 'all' ? photos : photos.filter((photo) => photo.camera.name === filter)),
-    [filter, photos]
-  );
+  const photos = rover?.id ? RoversState.photosByRover?.[rover.id]?.[filter]?.[sol] : [];
 
   return (
     <Container>
@@ -77,13 +109,16 @@ export const RoverPage = observer(() => {
         title={rover?.name || <Spin />}
         extra={[
           <Text key="4">Filter</Text>,
-          <Select value={filter} style={{ width: 500 }} key="3" onSelect={onSelectCamera}>
+          <Select
+            value={rover?.cameras.length ? filter : undefined}
+            style={{ width: 500 }}
+            key="3"
+            onSelect={onSelectCamera}
+            loading={!rover?.cameras.length}
+          >
             <>
-              <Select.Option key="all" value="all">
-                All
-              </Select.Option>
               {rover?.cameras.map((camera) => (
-                <Select.Option key={camera.name} value={camera.name}>
+                <Select.Option key={camera.name} value={camera.name.toLowerCase()}>
                   {camera?.fullName}
                 </Select.Option>
               ))}
@@ -97,9 +132,6 @@ export const RoverPage = observer(() => {
             placeholder="Sol"
             onChange={onChangeSol}
           />,
-          <Button key="1" type="primary">
-            Ok
-          </Button>,
         ]}
       >
         <Descriptions size="small" column={3}>
@@ -108,23 +140,29 @@ export const RoverPage = observer(() => {
           <Descriptions.Item label="Total photos">
             {rover?.totalPhotos || <Spin />}
           </Descriptions.Item>
+          <Descriptions.Item label="Max sol">{rover?.maxSol || <Spin />}</Descriptions.Item>
         </Descriptions>
       </PageHeader>
 
       <Carousel ref={carouselRef}>
-        {filteredPhotos?.map((photo) => (
-          <CarouselItem key={photo.id}>
-            <Image
-              src={photo.imgSrc}
-              key={photo.imgSrc}
-              width={400}
-              height={300}
-              placeholder={<Spinner />}
-            />
-          </CarouselItem>
-        ))}
+        {!isLoading &&
+          photos?.length &&
+          photos?.map((photo) => (
+            <CarouselItem key={photo.id}>
+              <Image
+                src={photo.imgSrc}
+                key={photo.imgSrc}
+                width={900}
+                height={500}
+                placeholder={<Spinner type="rover" />}
+              />
+            </CarouselItem>
+          ))}
       </Carousel>
-      {!!filteredPhotos?.length && (
+      {!hasPhotos && !isLoading && !initialLoading && <StyledHeading>No Photos! </StyledHeading>}
+      {isLoading && <StyledHeading>Loading...</StyledHeading>}
+
+      {!!photos?.length && (
         <ButtonsContainer>
           <Button type="primary" onClick={prevPhoto}>
             Prev photo
