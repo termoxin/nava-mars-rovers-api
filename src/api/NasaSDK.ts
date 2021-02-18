@@ -8,7 +8,9 @@ interface NasaSDKConfig {
   apiKey: string;
 }
 
-type fetchRoverPhotosParams = Record<'sol' | 'page', string>;
+export type fetchRoverPhotosParams = {
+  sol: string;
+};
 
 export class NasaSDK {
   url?: string;
