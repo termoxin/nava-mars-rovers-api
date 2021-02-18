@@ -1,21 +1,19 @@
-import { Button, Carousel, Descriptions, Image, InputNumber, PageHeader, Select, Spin } from 'antd';
+import { Descriptions, InputNumber, PageHeader, Select, Spin } from 'antd';
 import Text from 'antd/lib/typography/Text';
 import { observer } from 'mobx-react-lite';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import styled from 'styled-components';
+import { CarouselRef } from 'antd/lib/carousel';
 
 import { debounce } from 'lodash';
+
 import RoversState from '../store/Rovers';
 
 import { fetchPhotos } from '../effects/fetchPhotos';
 import { fetchRovers } from '../effects/fetchRovers';
-import { Spinner } from '../components/Spinner';
 import { Heading } from '../components/Heading';
-
-interface Params {
-  name: string;
-}
+import { RoversCarousel } from '../components/RoversCarousel';
 
 const Container = styled.div`
   display: flex;
@@ -25,27 +23,16 @@ const Container = styled.div`
   width: 100vw;
 `;
 
-const CarouselItem = styled.div`
-  display: flex !important;
-  justify-content: center;
-  margin: 50px 0 50px 0;
-`;
-
-const ButtonsContainer = styled.div`
-  display: flex;
-  justify-content: center;
-
-  button {
-    margin: 0 5px 0 5px;
-  }
-`;
-
 const StyledHeading = styled(Heading)`
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100%;
 `;
+
+interface Params {
+  name: string;
+}
 
 export const RoverPage = observer(() => {
   const [sol, setSol] = useState(RoversState.defaultSol);
@@ -54,15 +41,17 @@ export const RoverPage = observer(() => {
   const [isLoading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
-  const carouselRef = useRef<any>();
+  const carouselRef = useRef<CarouselRef>(null);
 
   const { name } = useParams<Params>();
   const { push } = useHistory();
 
-  const fetchData = async (roverName: string, selectedSol: number, camera: string) => {
+  const fetchRoversData = async (roverName: string, selectedSol: number, camera: string) => {
     setLoading(true);
 
-    await fetchRovers();
+    if (!RoversState.rovers.length) {
+      await fetchRovers();
+    }
 
     const response = await fetchPhotos(roverName, selectedSol, camera, {
       sol: `${selectedSol}`,
@@ -73,7 +62,7 @@ export const RoverPage = observer(() => {
     setLoading(false);
   };
 
-  const debouncedFetchRovers = useCallback(debounce(fetchData, 300), []);
+  const debouncedFetchRovers = useCallback(debounce(fetchRoversData, 300), []);
 
   useEffect(() => {
     if (initialLoading) {
@@ -95,11 +84,39 @@ export const RoverPage = observer(() => {
     debouncedFetchRovers(name, sol, value);
   };
 
-  const nextPhoto = () => carouselRef.current.next();
-  const prevPhoto = () => carouselRef.current.prev();
+  const nextPhoto = () => carouselRef.current?.next();
+  const prevPhoto = () => carouselRef.current?.prev();
 
   const rover = RoversState.getRoverByName(name);
   const photos = rover?.id ? RoversState.photosByRover?.[rover.id]?.[filter]?.[sol] : [];
+  const noPhotos = !hasPhotos && !isLoading && !initialLoading;
+
+  const extraComponent = [
+    <Text key="4">Filter</Text>,
+    <Select
+      value={rover?.cameras.length ? filter : undefined}
+      style={{ width: 500 }}
+      key="3"
+      onSelect={onSelectCamera}
+      loading={!rover?.cameras.length}
+    >
+      <>
+        {rover?.cameras.map((camera) => (
+          <Select.Option key={camera.name} value={camera.name.toLowerCase()}>
+            {camera?.fullName}
+          </Select.Option>
+        ))}
+      </>
+    </Select>,
+    <InputNumber
+      min={1}
+      max={rover?.maxSol}
+      value={sol}
+      key="2"
+      placeholder="Sol"
+      onChange={onChangeSol}
+    />,
+  ];
 
   return (
     <Container>
@@ -107,71 +124,32 @@ export const RoverPage = observer(() => {
         ghost={false}
         onBack={() => push('/')}
         title={rover?.name || <Spin />}
-        extra={[
-          <Text key="4">Filter</Text>,
-          <Select
-            value={rover?.cameras.length ? filter : undefined}
-            style={{ width: 500 }}
-            key="3"
-            onSelect={onSelectCamera}
-            loading={!rover?.cameras.length}
-          >
-            <>
-              {rover?.cameras.map((camera) => (
-                <Select.Option key={camera.name} value={camera.name.toLowerCase()}>
-                  {camera?.fullName}
-                </Select.Option>
-              ))}
-            </>
-          </Select>,
-          <InputNumber
-            min={1}
-            max={rover?.maxSol}
-            value={sol}
-            key="2"
-            placeholder="Sol"
-            onChange={onChangeSol}
-          />,
-        ]}
+        extra={extraComponent}
       >
         <Descriptions size="small" column={3}>
-          <Descriptions.Item label="Launched">{rover?.launchDate || <Spin />}</Descriptions.Item>
-          <Descriptions.Item label="Landed">{rover?.landingDate || <Spin />}</Descriptions.Item>
-          <Descriptions.Item label="Total photos">
-            {rover?.totalPhotos || <Spin />}
+          <Descriptions.Item label="Launched">
+            {rover?.launchDate || <Spin size="small" />}
           </Descriptions.Item>
-          <Descriptions.Item label="Max sol">{rover?.maxSol || <Spin />}</Descriptions.Item>
+          <Descriptions.Item label="Landed">
+            {rover?.landingDate || <Spin size="small" />}
+          </Descriptions.Item>
+          <Descriptions.Item label="Total photos">
+            {rover?.totalPhotos || <Spin size="small" />}
+          </Descriptions.Item>
+          <Descriptions.Item label="Max sol">
+            {rover?.maxSol || <Spin size="small" />}
+          </Descriptions.Item>
         </Descriptions>
       </PageHeader>
-
-      <Carousel ref={carouselRef}>
-        {!isLoading &&
-          photos?.length &&
-          photos?.map((photo) => (
-            <CarouselItem key={photo.id}>
-              <Image
-                src={photo.imgSrc}
-                key={photo.imgSrc}
-                width={900}
-                height={500}
-                placeholder={<Spinner type="rover" />}
-              />
-            </CarouselItem>
-          ))}
-      </Carousel>
-      {!hasPhotos && !isLoading && !initialLoading && <StyledHeading>No Photos! </StyledHeading>}
+      <RoversCarousel
+        isLoading={isLoading}
+        photos={photos}
+        carouselRef={carouselRef}
+        onNext={nextPhoto}
+        onPrev={prevPhoto}
+      />
+      {noPhotos && <StyledHeading>No Photos! </StyledHeading>}
       {isLoading && <StyledHeading>Loading...</StyledHeading>}
-
-      {!!photos?.length && (
-        <ButtonsContainer>
-          <Button type="primary" onClick={prevPhoto}>
-            Prev photo
-          </Button>
-          <Button type="primary" onClick={nextPhoto}>
-            Next photo
-          </Button>
-        </ButtonsContainer>
-      )}
     </Container>
   );
 });
