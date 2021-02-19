@@ -1,7 +1,20 @@
-# Getting Started and basic installation
+# Introduction
+
+The app uses Nasa Mars Rovers API to get rovers' photos by sol and camera. Enjoy this wonderful red planet!
+
+## Getting Started and Basic installation
 
 ```
 yarn
+```
+
+Don't forget to create `.env` out of `.env.example` to fill out env variables. If you don't have NASA API key you can use the demo key `DEMO_KEY` and the API https://api.nasa.gov/mars-photos/api/v1
+
+```
+// .env
+
+REACT_APP_NASA_API_KEY=DEMO_KEY
+REACT_APP_NASA_API_URL=https://api.nasa.gov/mars-photos/api/v1
 ```
 
 ## Available Scripts
