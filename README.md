@@ -1,4 +1,4 @@
-# Getting Started and basic installation
+# Getting Started and Basic installation
 
 ```
 yarn
