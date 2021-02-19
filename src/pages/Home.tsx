@@ -19,6 +19,7 @@ const Container = styled.div`
 `;
 
 const StyledHeading = styled(Heading)`
+  margin-top: 50px;
   span {
     color: #ea8162;
   }

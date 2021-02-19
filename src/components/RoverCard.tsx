@@ -58,7 +58,7 @@ export const RoverCardComponent: FC<RoverCardProps> = ({
       hoverable
       title={
         <Header>
-          {name} is {status} {getEmojiByStatus(status)}
+          {name}&apos;s mission is {status} {getEmojiByStatus(status)}
         </Header>
       }
     >
