@@ -1,4 +1,5 @@
 import { Button, Card, Col } from 'antd';
+import { memoize } from 'lodash';
 import { FC } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
@@ -45,7 +46,12 @@ const getEmojiByStatus = (status: roverStatus) => (status === 'active' ? '⏳' :
 
 type RoverCardProps = Rover;
 
-export const RoverCard: FC<RoverCardProps> = ({ name, status, launchDate, landingDate }) => (
+export const RoverCardComponent: FC<RoverCardProps> = ({
+  name,
+  status,
+  launchDate,
+  landingDate,
+}) => (
   <StyledColumn span={8}>
     <StyledCard
       hoverable
@@ -63,3 +69,5 @@ export const RoverCard: FC<RoverCardProps> = ({ name, status, launchDate, landin
     </StyledCard>
   </StyledColumn>
 );
+
+export const RoverCard = memoize(RoverCardComponent);

@@ -1,5 +1,5 @@
 import { PageHeader, Spin, Descriptions } from 'antd';
-import { FC } from 'react';
+import { FC, memo } from 'react';
 import { useHistory } from 'react-router-dom';
 
 import { Rover } from '../api/entities/Rover';
@@ -9,7 +9,7 @@ interface PageHeaderProps {
   rover?: Rover;
 }
 
-export const RoverPageHeader: FC<PageHeaderProps> = ({ extra, rover }) => {
+export const RoverPageHeader: FC<PageHeaderProps> = memo(({ extra, rover }) => {
   const { push } = useHistory();
 
   return (
@@ -35,4 +35,6 @@ export const RoverPageHeader: FC<PageHeaderProps> = ({ extra, rover }) => {
       </Descriptions>
     </PageHeader>
   );
-};
+});
+
+RoverPageHeader.displayName = 'RoverPageHeader';

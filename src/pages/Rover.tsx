@@ -17,6 +17,7 @@ import { RoversCarousel } from '../components/RoversCarousel';
 import { RoverPageHeader } from '../components/RoverPageHeader';
 
 import { useDebounce } from '../hooks/useDebounce';
+import { openNotificationWithIcon } from '../helpers/notification';
 
 const Container = styled.div`
   display: flex;
@@ -43,6 +44,7 @@ export const RoverPage = observer(() => {
   const [hasPhotos, setHasPhotos] = useState(false);
   const [isLoading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [showMaxSolNotification, setMaxSolNotification] = useState(false);
 
   const carouselRef = useRef<CarouselRef>(null);
   const { name } = useParams<Params>();
@@ -76,9 +78,25 @@ export const RoverPage = observer(() => {
     }
   }, [initialLoading]);
 
+  const rover = RoversState.getRoverByName(name);
+
   const onChangeSol = (value: string | number | null | undefined) => {
-    if (value) {
-      setSol(+value);
+    if (value && rover?.maxSol) {
+      if (rover.maxSol < +value) {
+        setMaxSolNotification(true);
+
+        if (!showMaxSolNotification) {
+          openNotificationWithIcon('warning', {
+            message: `You can't see pictures taken more than ${rover.maxSol} ${
+              rover.maxSol > 1 ? 'sols' : 'sol'
+            } ago`,
+            description: 'Be patient and keep watching',
+            onClose: () => setMaxSolNotification(false),
+          });
+        }
+      } else {
+        setSol(+value);
+      }
     }
   };
 
@@ -86,8 +104,6 @@ export const RoverPage = observer(() => {
 
   const nextPhoto = () => carouselRef.current?.next();
   const prevPhoto = () => carouselRef.current?.prev();
-
-  const rover = RoversState.getRoverByName(name);
 
   const photos = rover?.id
     ? RoversState.photosByRover?.[rover.id]?.[debouncedFilter]?.[debouncedSol]
