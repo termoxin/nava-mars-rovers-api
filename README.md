@@ -1,4 +1,8 @@
-# Getting Started and Basic installation
+# Introduction
+
+The app uses Nasa Mars Rovers API to get rovers' photos by sol and camera. Enjoy this wonderful red planet!
+
+## Getting Started and Basic installation
 
 ```
 yarn
