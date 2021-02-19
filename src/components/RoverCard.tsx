@@ -26,6 +26,7 @@ const StyledCard = styled(Card)`
   border: none;
   background: linear-gradient(to left, #fc5c7d, #6a82fb);
   width: 350px;
+  margin-top: 20px;
 
   * {
     border: none;
@@ -52,7 +53,7 @@ export const RoverCardComponent: FC<RoverCardProps> = ({
   launchDate,
   landingDate,
 }) => (
-  <StyledColumn span={8}>
+  <StyledColumn span={8} sm={24} md={24} lg={8}>
     <StyledCard
       hoverable
       title={

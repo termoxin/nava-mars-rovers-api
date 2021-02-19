@@ -11,13 +11,11 @@ import RoversState from '../store/Rovers';
 
 import { GlobalStyles } from '../GlobalStyles';
 
-const StyledRow = styled(Row)`
-  margin-top: 50px;
-`;
+const StyledRow = styled(Row)``;
 
 const Container = styled.div`
-  position: relative;
-  top: 50px;
+  height: 100%;
+  background: linear-gradient(to bottom, #355c7d, #6c5b7b, #c06c84);
 `;
 
 const StyledHeading = styled(Heading)`

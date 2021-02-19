@@ -7,7 +7,7 @@ export const GlobalStyles = createGlobalStyle`
     box-sizing: border-box;
   }
 
-  body {
-    background: linear-gradient(to bottom, #355c7d, #6c5b7b, #c06c84);
+  #root {
+    height: 100%;
   }
 `;
