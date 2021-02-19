@@ -95,8 +95,9 @@ export const RoverPage = observer(() => {
 
   const noPhotos = !hasPhotos && !isLoading && !initialLoading;
 
-  const extraComponent = [
-    <Text key="4">Filter</Text>,
+  const extraText = <Text key="4">Filter</Text>;
+
+  const extraSelect = (
     <Select
       value={isEmpty(rover?.cameras) ? undefined : filter}
       style={{ width: 500 }}
@@ -111,7 +112,10 @@ export const RoverPage = observer(() => {
           </Select.Option>
         ))}
       </>
-    </Select>,
+    </Select>
+  );
+
+  const extraNumberInput = (
     <InputNumber
       min={1}
       max={rover?.maxSol}
@@ -119,8 +123,10 @@ export const RoverPage = observer(() => {
       key="2"
       placeholder="Sol"
       onChange={onChangeSol}
-    />,
-  ];
+    />
+  );
+
+  const extraComponent = [extraText, extraSelect, extraNumberInput];
 
   return (
     <Container>
