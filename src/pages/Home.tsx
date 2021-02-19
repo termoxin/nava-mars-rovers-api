@@ -11,8 +11,6 @@ import RoversState from '../store/Rovers';
 
 import { GlobalStyles } from '../GlobalStyles';
 
-const StyledRow = styled(Row)``;
-
 const Container = styled.div`
   height: 100%;
   background: linear-gradient(to bottom, #355c7d, #6c5b7b, #c06c84);
@@ -43,9 +41,9 @@ export const HomePage: FC = observer(() => {
           Discover <span>Mars</span> first
         </StyledHeading>
       </Row>
-      <StyledRow justify="space-around" align="middle">
+      <Row justify="space-around" align="middle">
         {roverCards}
-      </StyledRow>
+      </Row>
       <GlobalStyles />
     </Container>
   );
