@@ -1,17 +1,21 @@
-import { Descriptions, InputNumber, PageHeader, Select, Spin } from 'antd';
+import { InputNumber, Select } from 'antd';
 import Text from 'antd/lib/typography/Text';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useRef, useState } from 'react';
-import { useHistory, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { CarouselRef } from 'antd/lib/carousel';
+import { isEmpty } from 'lodash';
 
 import RoversState from '../store/Rovers';
 
 import { fetchPhotos } from '../effects/fetchPhotos';
 import { fetchRovers } from '../effects/fetchRovers';
+
 import { Heading } from '../components/Heading';
 import { RoversCarousel } from '../components/RoversCarousel';
+import { RoverPageHeader } from '../components/RoverPageHeader';
+
 import { useDebounce } from '../hooks/useDebounce';
 
 const Container = styled.div`
@@ -41,9 +45,7 @@ export const RoverPage = observer(() => {
   const [initialLoading, setInitialLoading] = useState(true);
 
   const carouselRef = useRef<CarouselRef>(null);
-
   const { name } = useParams<Params>();
-  const { push } = useHistory();
 
   const fetchRoversData = async (roverName: string, selectedSol: number, camera: string) => {
     setLoading(true);
@@ -96,11 +98,11 @@ export const RoverPage = observer(() => {
   const extraComponent = [
     <Text key="4">Filter</Text>,
     <Select
-      value={rover?.cameras.length ? filter : undefined}
+      value={isEmpty(rover?.cameras) ? undefined : filter}
       style={{ width: 500 }}
       key="3"
       onSelect={onSelectCamera}
-      loading={!rover?.cameras.length}
+      loading={isEmpty(rover?.cameras)}
     >
       <>
         {rover?.cameras.map((camera) => (
@@ -122,27 +124,7 @@ export const RoverPage = observer(() => {
 
   return (
     <Container>
-      <PageHeader
-        ghost={false}
-        onBack={() => push('/')}
-        title={rover?.name || <Spin />}
-        extra={extraComponent}
-      >
-        <Descriptions size="small" column={3}>
-          <Descriptions.Item label="Launched">
-            {rover?.launchDate || <Spin size="small" />}
-          </Descriptions.Item>
-          <Descriptions.Item label="Landed">
-            {rover?.landingDate || <Spin size="small" />}
-          </Descriptions.Item>
-          <Descriptions.Item label="Total photos">
-            {rover?.totalPhotos || <Spin size="small" />}
-          </Descriptions.Item>
-          <Descriptions.Item label="Max sol">
-            {rover?.maxSol || <Spin size="small" />}
-          </Descriptions.Item>
-        </Descriptions>
-      </PageHeader>
+      <RoverPageHeader extra={extraComponent} rover={rover} />
       <RoversCarousel
         isLoading={isLoading}
         photos={photos}

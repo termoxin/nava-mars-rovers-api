@@ -53,7 +53,7 @@ export const RoversCarousel: FC<RoversCarouselProps> = ({
           </CarouselItem>
         ))}
     </Carousel>
-    {!isEmpty(photos) && (
+    {!isEmpty(photos) && !isLoading && (
       <ButtonsContainer>
         <Button type="primary" onClick={onPrev}>
           Prev photo
